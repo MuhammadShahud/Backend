@@ -1,5 +1,5 @@
 const httpStatus = require('http-status');
-const { User } = require('../models');
+const { User, Notification } = require('../models');
 const questionService = require('./question.service');
 const notificationService = require('./notification.service');
 const cardService = require('./card.service');
@@ -49,13 +49,26 @@ const oneToOneNotification = async (request) => {
 
 cron.schedule("3 9 * * *", async function () {
   let studyReminderToken = []
+  let advertisementToken = []
+  const notifyAll = await Notification.find()
   const studyReminder = await User.find({
     examDate: {
       $gte: new Date()
     }
   })
-  console.log("studyRemindder --->>> ", studyReminder)
+
   studyReminder.forEach(value => studyReminderToken = [...studyReminderToken, value.token])
+  notifyAll.forEach(value => advertisementToken = [...advertisementToken, value.token])
+
+
+  if (advertisementToken.length > 0) {
+    oneToOneNotification({
+      title: "Real Estate Education",
+      body: "You haven't practice on Real Estate Education App? We are waiting with a lots of new practice questions and vocabulary.",
+      data: {},
+      tokens: studyReminderToken
+    })
+  }
 
   if (studyReminderToken.length > 0) {
     oneToOneNotification({
@@ -64,8 +77,8 @@ cron.schedule("3 9 * * *", async function () {
       data: {},
       tokens: studyReminderToken
     })
-
   }
+
 
 });
 
